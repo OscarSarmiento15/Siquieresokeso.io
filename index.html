@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¿Entonces aceptas?</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #E4007C; /* Rosa Mexicano */
+            font-family: 'Arial Rounded MT Bold', 'Helvetica Rounded', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            text-align: center;
+            background-color: rgba(255, 255, 255, 0.15);
+            padding: 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            max-width: 90%;
+        }
+
+        h1 {
+            color: #FFFFFF;
+            font-size: 3rem;
+            margin-bottom: 40px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .buttons-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            position: relative;
+            min-height: 100px;
+        }
+
+        .btn {
+            padding: 15px 35px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:hover {
+            transform: scale(1.1);
+        }
+
+        #btn-si {
+            background-color: #4CAF50; /* Verde */
+            color: white;
+        }
+
+        #btn-no {
+            background-color: #F44336; /* Rojo */
+            color: white;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        /* Animación para cuando gane */
+        .celebration {
+            display: none;
+            color: #FFFFFF;
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            animation: pop 0.5s ease-out forwards;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container" id="main-container">
+        <h1 id="question">¿Entonces aceptas?</h1>
+        <div class="buttons-container" id="action-box">
+            <button class="btn" id="btn-si">Sí</button>
+            <button class="btn" id="btn-no">No</button>
+        </div>
+        <div class="celebration" id="victory-message">
+            ¡Sabiiaaa que dirías que sí! ❤️ Enormemente feliz.
+        </div>
+    </div>
+
+    <script>
+        const btnSi = document.getElementById('btn-si');
+        const btnNo = document.getElementById('btn-no');
+        const question = document.getElementById('question');
+        const actionBox = document.getElementById('action-box');
+        const victoryMessage = document.getElementById('victory-message');
+
+        let siScale = 1;
+        let noScale = 1;
+
+        // Lista de respuestas graciosas si intenta presionar "No"
+        const reproches = [
+            "¿Cómo que no? 🥺",
+            "Piénsalo bien...",
+            "Te daré otra oportunidad de elegir bien",
+            "¿Estás segura? 💔",
+            "Andaaaa, di que sí",
+            "Esa opción está rota, intenta la otra"
+        ];
+        let reprocheIndex = 0;
+
+        btnNo.addEventListener('click', () => {
+            // 1. Hace el botón del SÍ cada vez más grande
+            siScale += 0.4;
+            btnSi.style.transform = `scale(${siScale})`;
+            
+            // 2. Reduce el botón del NO
+            noScale -= 0.15;
+            if (noScale < 0.4) noScale = 0.4; // Que no desaparezca del todo para que pueda seguir clickeándolo
+            btnNo.style.transform = `scale(${noScale})`;
+
+            // 3. Cambia el texto de la pregunta para persuadir un poquito
+            question.innerText = reproches[reprocheIndex];
+            reprocheIndex = (reprocheIndex + 1) % reproches.length;
+
+            // 4. Mueve el botón "No" a una posición aleatoria para que sea difícil de atrapar
+            const x = Math.random() * (window.innerWidth - btnNo.offsetWidth - 100) - (window.innerWidth / 2 - 100);
+            const y = Math.random() * (window.innerHeight - btnNo.offsetHeight - 100) - (window.innerHeight / 2 - 100);
+            
+            btnNo.style.position = 'absolute';
+            btnNo.style.left = `${x}px`;
+            btnNo.style.top = `${y}px`;
+        });
+
+        btnSi.addEventListener('click', () => {
+            // Oculta los botones y la pregunta original, muestra la celebración
+            question.style.display = 'none';
+            actionBox.style.display = 'none';
+            victoryMessage.style.display = 'block';
+            
+            // Un toque extra: cambia el fondo a un patrón brillante o algo divertido si quieres
+            document.body.style.backgroundColor = '#FF1493'; // Un rosa aún más encendido de alegría
+        });
+    </script>
+</body>
+</html>
