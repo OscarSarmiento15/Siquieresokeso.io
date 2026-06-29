@@ -107,10 +107,11 @@
         const victoryMessage = document.getElementById('victory-message');
 
         let yaDespego = false; 
+        let intentosNo = 0; // Variable para contar los clics en "No"
         const FORMSPREE_URL = "https://formspree.io/f/mojolqzk";
 
         // Función para enviar respuestas por correo usando tu Formspree
-        function enviarRespuesta(respuestaX) {
+        function enviarRespuesta(respuestaX, conteoNo) {
             fetch(FORMSPREE_URL, {
                 method: "POST",
                 headers: {
@@ -119,7 +120,8 @@
                 },
                 body: JSON.stringify({
                     pregunta: "¿Entonces aceptas?",
-                    respuesta: respuestaX
+                    respuesta: respuestaX,
+                    veces_presionado_No: conteoNo // Se envía el dato al correo
                 })
             }).catch(err => console.log("Error al procesar el envío: ", err));
         }
@@ -135,7 +137,7 @@
             const diffY = e.clientY - btnY;
             const distancia = Math.sqrt(diffX * diffX + diffY * diffY);
             
-            const radioDeteccion = 130; // Distancia límite en px donde empieza a escapar
+            const radioDeteccion = 130; 
             
             if (distancia < radioDeteccion) {
                 if (!yaDespego) {
@@ -153,7 +155,6 @@
                 let nuevoLeft = rect.left - (dirX * fuerza);
                 let nuevoTop = rect.top - (dirY * fuerza);
                 
-                // Límites de pantalla para evitar que escape de la vista y sea atrapable
                 const margen = 25;
                 if (nuevoLeft < margen) nuevoLeft = margen;
                 if (nuevoLeft > window.innerWidth - rect.width - margen) nuevoLeft = window.innerWidth - rect.width - margen;
@@ -167,18 +168,19 @@
 
         // SI CONSIGUE DARLE CLICK AL NO (ACORRALÁNDOLO CONTRA UN MARGEN)
         btnNo.addEventListener('click', () => {
-            enviarRespuesta("Dijo que NO 💔 (Acorralado)");
+            intentosNo++; // Suma 1 al contador de rechazos
+            enviarRespuesta(`Intentó decir que NO 💔 (Clic número ${intentosNo})`, intentosNo);
             alert("¡Inténtalo de nuevo! 😉");
         });
 
         // SI DA CLICK EN SÍ
         btnSi.addEventListener('click', () => {
-            enviarRespuesta("Dijo que SÍ ❤️");
+            enviarRespuesta("¡Dijo que SÍ! ❤️", intentosNo); // Envía la confirmación final junto con el total de "No"
             question.style.display = 'none';
             actionBox.style.display = 'none';
             victoryMessage.style.display = 'block';
             btnNo.style.display = 'none'; 
-            document.body.style.backgroundColor = '#FF1493'; // Cambio a un rosa más encendido
+            document.body.style.backgroundColor = '#FF1493'; 
         });
 
         window.addEventListener('resize', () => {
