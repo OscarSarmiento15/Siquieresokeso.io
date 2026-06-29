@@ -26,6 +26,7 @@
             backdrop-filter: blur(10px);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             max-width: 90%;
+            z-index: 10;
         }
 
         h1 {
@@ -40,7 +41,6 @@
             justify-content: center;
             align-items: center;
             gap: 20px;
-            position: relative;
             min-height: 100px;
         }
 
@@ -51,27 +51,26 @@
             border: none;
             border-radius: 50px;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .btn:hover {
-            transform: scale(1.1);
         }
 
         #btn-si {
             background-color: #4CAF50; /* Verde */
             color: white;
+            transition: transform 0.2s;
+        }
+
+        #btn-si:hover {
+            transform: scale(1.1);
         }
 
         #btn-no {
             background-color: #F44336; /* Rojo */
             color: white;
-            position: relative;
-            transition: all 0.2s ease;
+            position: relative; /* Arranca en su flujo natural */
+            will-change: left, top;
         }
 
-        /* Animación para cuando gane */
         .celebration {
             display: none;
             color: #FFFFFF;
@@ -107,51 +106,87 @@
         const actionBox = document.getElementById('action-box');
         const victoryMessage = document.getElementById('victory-message');
 
-        let siScale = 1;
-        let noScale = 1;
+        let yaDespego = false; 
+        const FORMSPREE_URL = "https://formspree.io/f/mojolqzk";
 
-        // Lista de respuestas graciosas si intenta presionar "No"
-        const reproches = [
-            "¿Cómo que no? 🥺",
-            "Piénsalo bien...",
-            "Te daré otra oportunidad de elegir bien",
-            "¿Estás segura? 💔",
-            "Andaaaa, di que sí",
-            "Esa opción está rota, intenta la otra"
-        ];
-        let reprocheIndex = 0;
+        // Función para enviar respuestas por correo usando tu Formspree
+        function enviarRespuesta(respuestaX) {
+            fetch(FORMSPREE_URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify({
+                    pregunta: "¿Entonces aceptas?",
+                    respuesta: respuestaX
+                })
+            }).catch(err => console.log("Error al procesar el envío: ", err));
+        }
 
-        btnNo.addEventListener('click', () => {
-            // 1. Hace el botón del SÍ cada vez más grande
-            siScale += 0.4;
-            btnSi.style.transform = `scale(${siScale})`;
+        // EFECTO DE MOVIMIENTO DE RECHAZO (HUIDA TIPO IMÁN)
+        document.addEventListener('mousemove', (e) => {
+            const rect = btnNo.getBoundingClientRect();
             
-            // 2. Reduce el botón del NO
-            noScale -= 0.15;
-            if (noScale < 0.4) noScale = 0.4; // Que no desaparezca del todo para que pueda seguir clickeándolo
-            btnNo.style.transform = `scale(${noScale})`;
-
-            // 3. Cambia el texto de la pregunta para persuadir un poquito
-            question.innerText = reproches[reprocheIndex];
-            reprocheIndex = (reprocheIndex + 1) % reproches.length;
-
-            // 4. Mueve el botón "No" a una posición aleatoria para que sea difícil de atrapar
-            const x = Math.random() * (window.innerWidth - btnNo.offsetWidth - 100) - (window.innerWidth / 2 - 100);
-            const y = Math.random() * (window.innerHeight - btnNo.offsetHeight - 100) - (window.innerHeight / 2 - 100);
+            const btnX = rect.left + rect.width / 2;
+            const btnY = rect.top + rect.height / 2;
             
-            btnNo.style.position = 'absolute';
-            btnNo.style.left = `${x}px`;
-            btnNo.style.top = `${y}px`;
+            const diffX = e.clientX - btnX;
+            const diffY = e.clientY - btnY;
+            const distancia = Math.sqrt(diffX * diffX + diffY * diffY);
+            
+            const radioDeteccion = 130; // Distancia límite en px donde empieza a escapar
+            
+            if (distancia < radioDeteccion) {
+                if (!yaDespego) {
+                    btnNo.style.position = 'fixed';
+                    btnNo.style.left = `${rect.left}px`;
+                    btnNo.style.top = `${rect.top}px`;
+                    yaDespego = true;
+                    return; 
+                }
+
+                const fuerza = (radioDeteccion - distancia) / 1.5;
+                const dirX = diffX / distancia;
+                const dirY = diffY / distancia;
+                
+                let nuevoLeft = rect.left - (dirX * fuerza);
+                let nuevoTop = rect.top - (dirY * fuerza);
+                
+                // Límites de pantalla para evitar que escape de la vista y sea atrapable
+                const margen = 25;
+                if (nuevoLeft < margen) nuevoLeft = margen;
+                if (nuevoLeft > window.innerWidth - rect.width - margen) nuevoLeft = window.innerWidth - rect.width - margen;
+                if (nuevoTop < margen) nuevoTop = margen;
+                if (nuevoTop > window.innerHeight - rect.height - margen) nuevoTop = window.innerHeight - rect.height - margen;
+                
+                btnNo.style.left = `${nuevoLeft}px`;
+                btnNo.style.top = `${nuevoTop}px`;
+            }
         });
 
+        // SI CONSIGUE DARLE CLICK AL NO (ACORRALÁNDOLO CONTRA UN MARGEN)
+        btnNo.addEventListener('click', () => {
+            enviarRespuesta("Dijo que NO 💔 (Acorralado)");
+            alert("¡Inténtalo de nuevo! 😉");
+        });
+
+        // SI DA CLICK EN SÍ
         btnSi.addEventListener('click', () => {
-            // Oculta los botones y la pregunta original, muestra la celebración
+            enviarRespuesta("Dijo que SÍ ❤️");
             question.style.display = 'none';
             actionBox.style.display = 'none';
             victoryMessage.style.display = 'block';
-            
-            // Un toque extra: cambia el fondo a un patrón brillante o algo divertido si quieres
-            document.body.style.backgroundColor = '#FF1493'; // Un rosa aún más encendido de alegría
+            btnNo.style.display = 'none'; 
+            document.body.style.backgroundColor = '#FF1493'; // Cambio a un rosa más encendido
+        });
+
+        window.addEventListener('resize', () => {
+            if (!yaDespego) {
+                btnNo.style.position = 'relative';
+                btnNo.style.left = 'auto';
+                btnNo.style.top = 'auto';
+            }
         });
     </script>
 </body>
